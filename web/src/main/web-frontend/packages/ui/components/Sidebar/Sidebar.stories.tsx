@@ -1,23 +1,22 @@
 import React from 'react';
-import { css } from '@emotion/react';
-import styled from '@emotion/styled';
-import { FaNetworkWired, FaChartLine, FaCog, FaUserCog, FaChartBar, FaServer, FaUserCircle } from 'react-icons/fa';
-import { Sidebar, Menu, MenuItem, SubMenu, Divider, menuItemStyles, bottomMenuItemStyles } from '@pinpoint-fe/ui';
+import { ComponentStory, ComponentMeta } from '@storybook/react';
 
-interface LayoutWithSideNavigationProps {
-  children: React.ReactNode;
-}
+import { Menu, MenuItem, SidebarProvider, Sidebar, Divider, menuItemStyles, bottomMenuItemStyles } from './Sidebar';
+import { FaNetworkWired, FaChartLine, FaChartBar, FaServer, FaCog, FaUserCircle } from 'react-icons/fa';
+import { SubMenu } from 'react-pro-sidebar';
 
-export const LayoutWithSideNavigation = ({
-  children,
-}: LayoutWithSideNavigationProps) => {
-  function handleClickScaleButton({ small }: { small: boolean }) {
-    // TODO save localstorage
-  }
+export default {
+  title: 'PINPOINT/Component/BASE/Sidebar',
+  component: Sidebar,
+  argTypes: {
+    backgroundColor: { control: 'color' },
+  },
+} as ComponentMeta<typeof Sidebar>;
 
+const Template: ComponentStory<typeof Sidebar> = (args) => {
   return (
-    <StyledContainer>
-      <div style={{display: 'flex', height: '100vh'}}>
+    <SidebarProvider>
+      <div style={{ display: 'flex', height: '100vh' }}>
         <Sidebar>
           <Menu menuItemStyles={menuItemStyles}>
             <MenuItem icon={<FaNetworkWired />}>Servermap</MenuItem>
@@ -60,27 +59,11 @@ export const LayoutWithSideNavigation = ({
           </Menu>
         </Sidebar>
       </div>
-      <div css={css`flex:1;`}>
-        {children}
-      </div>
-    </StyledContainer>
-  );
+    </SidebarProvider>
+  )
 };
 
-const StyledContainer = styled.div`
-  display: flex;
-`
-
-const BottomAlignedMenus = styled.div`
-  margin-top: auto;
-`
-
-export const getLayoutWithSideNavigation = (page: React.ReactNode) => {
-  return (
-    <LayoutWithSideNavigation>
-      {page}
-    </LayoutWithSideNavigation>
-  )
-}
-
+export const Default = Template.bind({});
+Default.args = {
+};
 

@@ -1,5 +1,5 @@
 import '@pinpoint-fe/ui/dist/index.css';
-
+// import '@pinpoint-fe/ui/Sidebar/index.css';
 import { ReactElement, ReactNode } from 'react'
 import { NextPage } from 'next';
 import type { AppContext, AppProps } from 'next/app'
@@ -8,7 +8,7 @@ import { IconContext } from 'react-icons';
 // import { RootThemeProvider } from '@pinpoint-fe/ui/styles/theme';
 // import themeLight from '@pinpoint-fe/ui/styles/theme-light';
 import { SWRConfig } from 'swr';
-import { GlobalStyle } from '@pinpoint-fe/ui';
+import { GlobalStyle, SidebarProvider } from '@pinpoint-fe/ui';
 import { Provider as JotaiProvider } from 'jotai';
 import { getInitialAtoms } from '../atoms/getInitialAtoms';
 import Head from 'next/head';
@@ -50,7 +50,9 @@ const AppRoot = ({ Component, pageProps }: AppPropsWithLayout) => {
         }}>
           {/* <JotaiProvider initialValues={initialAtom}> */}
             <div className="content">
-              {getLayout(<Component {...pageProps} />)}
+              <SidebarProvider>
+                {getLayout(<Component {...pageProps} />)}
+              </SidebarProvider>
             </div>
           {/* </JotaiProvider> */}
         </SWRConfig>

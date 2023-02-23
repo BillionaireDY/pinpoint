@@ -3,7 +3,7 @@
   "include": [".", "**/*.ts", "**/*.tsx"],
   "exclude": ["dist", "build", "node_modules"],
   "compilerOptions": {
-    "jsxImportSource": "@emotion/react"
+    "jsxImportSource": "@emotion/react",
   }
 }
 

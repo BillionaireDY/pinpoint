@@ -1,4 +1,4 @@
-import { Button } from "@pinpoint-fe/ui";
+import { Button } from "@pinpoint-fe/ui/Button";
 
 export default function Web() {
   return (

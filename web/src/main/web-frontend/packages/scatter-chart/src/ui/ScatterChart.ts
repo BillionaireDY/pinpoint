@@ -172,8 +172,8 @@ export class ScatterChart {
   private setRatio() {
     const axisOption = this.options?.axis;
     const padding = this.options.padding;
-    const width = this.viewport.canvas.width / this.viewport.viewLayer.dpr;
-    const height = this.viewport.canvas.height / this.viewport.viewLayer.dpr;
+    const width = this.viewport.getCanvas().width / this.viewport.getViewLayer().getDpr();
+    const height = this.viewport.getCanvas().height / this.viewport.getViewLayer().getDpr();
     const minX = axisOption.x.min;
     const maxX = axisOption.x.max;
     const minY = axisOption.y.min;
@@ -204,8 +204,8 @@ export class ScatterChart {
   }
 
   private setLayers() {
-    const width = this.viewport.styleWidth;
-    const height = this.viewport.styleHeight;
+    const width = this.viewport.getStyleWidth();
+    const height = this.viewport.getStyleHeight();
     const dataOptions = this.options.data;
     this.setDataStyle(dataOptions)
 
@@ -223,8 +223,8 @@ export class ScatterChart {
 
   private setLayer(legend: string, width: number, height: number, priority: number) {
     const layer = new Layer({ width, height });
-    layer.id = legend;
-    layer.priority = priority;
+    layer.setId(legend);
+    layer.setPriority(priority);
     this.dataLayers[legend] = layer;
     this.viewport.addLayer(layer);
     return layer;
@@ -288,7 +288,7 @@ export class ScatterChart {
 
   private shoot() {
     this.viewport.clear();
-    drawRect(this.viewport.context, 0, 0, this.width, this.height, { color: this.options.background?.color });
+    drawRect(this.viewport.getContext(), 0, 0, this.width, this.height, { color: this.options.background?.color });
     this.viewport.render(this.coordX, this.coordY);
   }
 
@@ -297,7 +297,7 @@ export class ScatterChart {
     if (!this.t0) this.t0 = now;
     const dt = now - this.t0;
     const innerPadding = this.xAxis.innerPadding;
-    const pureWidth = this.viewport.styleWidth - this.options.padding.left - this.options.padding.right - innerPadding * 2;
+    const pureWidth = this.viewport.getStyleWidth() - this.options.padding.left - this.options.padding.right - innerPadding * 2;
     const pixcelPerFrame = pureWidth / duration * dt;
     this.t0 = now;
     this.coordX = this.coordX - pixcelPerFrame;
@@ -340,7 +340,7 @@ export class ScatterChart {
         .render();
       Object.values(this.dataLayers)
         .forEach(layer => {
-          if (!layer.isFixed) {
+          if (!layer.getIsFixed()) {
             layer.swapCanvasImage({
               width: pureWidth,
               startAt: this.xAxis.innerPadding + this.options.padding.left,
@@ -352,7 +352,8 @@ export class ScatterChart {
   }
 
   private addNewDataType = (type: string) => {
-    const { styleWidth, styleHeight } = this.viewport;
+    const styleWidth = this.viewport.getStyleWidth();
+    const styleHeight = this.viewport.getStyleHeight();
     this.options.data = [...this.options.data, { type }]
     this.setDataStyle(this.options.data);
     this.setLayer(type, styleWidth, styleHeight, LAYER_DEFAULT_PRIORITY);
@@ -360,7 +361,7 @@ export class ScatterChart {
   }
 
   public render(data: ScatterDataType[], option?: RenderOption) {
-    const { styleHeight } = this.viewport;
+    const styleHeight = this.viewport.getStyleHeight();
     const { padding } = this.options;
     const renderOption = { ...this.options.render, ...option };
 
@@ -399,7 +400,7 @@ export class ScatterChart {
           : styleHeight - padding.bottom - this.yAxis.innerPadding - this.yRatio * (y - this.yAxis.min);
         
           !hidden && drawCircle(
-          this.dataLayers[legend].context,
+          this.dataLayers[legend].getContext(),
           xCoordinate,
           yCoordinate,
           {
@@ -495,10 +496,10 @@ export class ScatterChart {
     const legendCanvas = await html2canvas(document.querySelector(`.${Legend.LEGEND_CONTAINER_CLASS}`)!);
 
     layer.setSize(containerCanvas.width, containerCanvas.height + legendCanvas.height);
-    layer.context.drawImage(containerCanvas, 0, 0);
-    layer.context.drawImage(legendCanvas, 0, containerCanvas.height);
+    layer.getContext().drawImage(containerCanvas, 0, 0);
+    layer.getContext().drawImage(legendCanvas, 0, containerCanvas.height);
 
-    const image = layer.canvas
+    const image = layer.getCanvas()
       .toDataURL("image/png")
       .replace("image/png", "image/octet-stream");
 

@@ -19,44 +19,44 @@ export class Viewport {
       width, 
       height,
     });
-    this.view.canvas.style.display = 'block';
-    wrapper.append(this.view.canvas);
+    this.view.getCanvas().style.display = 'block';
+    wrapper.append(this.view.getCanvas());
   }
 
-  get viewLayer() {
+  getViewLayer() {
     return this.view;
   }
 
-  get canvas() {
-    return this.view.canvas;
+  getCanvas() {
+    return this.view.getCanvas();
   }
 
-  get context() {
-    return this.view.context;
+  getContext() {
+    return this.view.getContext();
   }
 
-  get styleWidth() {
-    return this.view.canvas.width / this.view.dpr;
+  getStyleWidth() {
+    return this.view.getCanvas().width / this.view.getDpr();
   }
 
-  get styleHeight() {
-    return this.view.canvas.height / this.view.dpr;  
+  getStyleHeight() {
+    return this.view.getCanvas().height / this.view.getDpr();  
   }
 
   public render(x: number, y: number) {
     this.layers.forEach(layer => {
-      const layerCanvas = layer.canvas;
-      const dpr = layer.dpr;
+      const layerCanvas = layer.getCanvas();
+      const dpr = layer.getDpr();
       
-      if (layer.isDisplay) {
-        if (layer.isFixed) {
-          this.view.context.drawImage(
+      if (layer.getIsDisplay()) {
+        if (layer.getIsFixed()) {
+          this.view.getContext().drawImage(
             layerCanvas, 
             0, 0, layerCanvas.width, layerCanvas.height, 
             0, 0, layerCanvas.width / dpr, layerCanvas.height / dpr
           );
         } else {
-          this.view.context.drawImage(
+          this.view.getContext().drawImage(
             layerCanvas, 
             -x * dpr, y * dpr, layerCanvas.width, layerCanvas.height,
             0, y, layerCanvas.width / dpr, layerCanvas.height / dpr
@@ -67,11 +67,11 @@ export class Viewport {
   }
 
   public hideLayer(id: string) {
-    this.layers.filter(layer => layer.id === id)[0].hide();
+    this.layers.filter(layer => layer.getId() === id)[0].hide();
   }
 
   public showLayer(id: string) {
-    this.layers.filter(layer => layer.id === id)[0].show();
+    this.layers.filter(layer => layer.getId() === id)[0].show();
   }
 
   public addLayer(layer: Layer | Layer[]) {
@@ -84,7 +84,7 @@ export class Viewport {
       this.layers.push(layer);
     }
     this.layers.sort((a, b) => {
-      if (a.priority > b.priority) {
+      if (a.getPriority() > b.getPriority()) {
         return -1;
       } else 
         return 1;
@@ -102,6 +102,6 @@ export class Viewport {
   } 
 
   public clear() {
-    this.view.context.clearRect(0, 0, this.view.canvas.width, this.view.canvas.height);
+    this.view.getContext().clearRect(0, 0, this.view.getCanvas().width, this.view.getCanvas().height);
   }
 }

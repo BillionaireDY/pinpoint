@@ -7,12 +7,12 @@ describe('Test for Axis', () => {
 
   afterEach(() => {
     // check all canvas context rendering events
-    const viewportEvents = SC.viewport.context.__getEvents();
+    const viewportEvents = SC.viewport.getContext().__getEvents();
     const contexts = [
-      SC.viewport.context,
-      SC.getXAxis().context,
-      SC.getYAxis().context,
-      SC.getGridAxis().context,
+      SC.viewport.getContext(),
+      SC.getXAxis().getContext(),
+      SC.getYAxis().getContext(),
+      SC.getGridAxis().getContext(),
     ];
     contexts.forEach(ctx => {
       const events = ctx.__getEvents();

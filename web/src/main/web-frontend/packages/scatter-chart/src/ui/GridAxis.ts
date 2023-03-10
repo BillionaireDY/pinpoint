@@ -31,7 +31,7 @@ export class GridAxis extends Layer {
     this.yAxis = yAxis;
     this.option = option;
     this.padding = { ...CONTAINER_PADDING, ...padding };
-    this.priority = 99999;
+    this.setPriority(99999);
 
     if (option?.hidden) {
       this.hide();
@@ -45,8 +45,8 @@ export class GridAxis extends Layer {
     const { count, width: tickWidth } = this.xAxis.tick as DeepNonNullable<TickOption>;
     const { strokeColor } = this.option as DeepNonNullable<GridOption>;
     const padding = this.padding;
-    const width = this.canvas.width / this.dpr;
-    const height = this.canvas.height / this.dpr;
+    const width = this.getCanvas().width / this.getDpr();
+    const height = this.getCanvas().height / this.getDpr();
 
     const startX = padding.left + this.xAxis.innerPadding;
     const startY = padding.top;
@@ -56,7 +56,7 @@ export class GridAxis extends Layer {
 
     [...Array(count)].forEach((_ , i) => {
       const x = wGap * i + startX;
-      drawLine(this.context, x, startY, x, endY + tickWidth, { color: strokeColor });
+      drawLine(this.getContext(), x, startY, x, endY + tickWidth, { color: strokeColor });
     })
   }
 
@@ -64,8 +64,8 @@ export class GridAxis extends Layer {
     const { count, width: tickWidth } = this.yAxis.tick as DeepNonNullable<TickOption>;
     const { strokeColor } = this.option as DeepNonNullable<GridOption>;
     const padding = this.padding;
-    const width = this.canvas.width / this.dpr;
-    const height = this.canvas.height / this.dpr;
+    const width = this.getCanvas().width / this.getDpr();
+    const height = this.getCanvas().height / this.getDpr();
     
     const startX = padding.left;
     const startY = padding.top + this.yAxis.innerPadding;
@@ -75,7 +75,7 @@ export class GridAxis extends Layer {
 
     [...Array(count)].forEach((_, i) => {
       const y = hGap * i + startY;
-      drawLine(this.context, startX - tickWidth, y, endX, y, { color: strokeColor });
+      drawLine(this.getContext(), startX - tickWidth, y, endX, y, { color: strokeColor });
     })
   }
 

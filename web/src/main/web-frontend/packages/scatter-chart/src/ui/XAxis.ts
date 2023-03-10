@@ -9,7 +9,7 @@ export class XAxis extends Axis {
     ...props
   }: XAxisProps) {
     super(props);
-    this.priority = -1;
+    this.setPriority(-1);
   }
 
   public setPadding(padding: Padding) {
@@ -29,8 +29,8 @@ export class XAxis extends Axis {
     const { min, max, tick, innerPadding, strokeColor } = this;
     const { format, count, color, width: tickWidth, strokeColor: tickStrokeColor } = tick as DeepNonNullable<TickOption>;
     const padding = this.padding;
-    const width = this.canvas.width / this.dpr;
-    const height = this.canvas.height / this.dpr;
+    const width = this.getCanvas().width / this.getDpr();
+    const height = this.getCanvas().height / this.getDpr();
     const startX = padding.left + innerPadding;
     const endX = width - padding.right - innerPadding;
     const endY = height - padding.bottom;
@@ -45,14 +45,14 @@ export class XAxis extends Axis {
 
       lines.reverse().forEach((line, i) => {
         drawText(
-          this.context, `${line}`, 
+          this.getContext(), `${line}`, 
           x,
           height - padding.bottom + tick?.width! + textHeight + tick?.padding?.top! - i * this.getTextHeight(line),
           { textAlign: 'center', textBaseline: 'bottom', color }
         );
       })
-      drawLine(this.context, x, endY, x, endY + tickWidth, { color: tickStrokeColor });
+      drawLine(this.getContext(), x, endY, x, endY + tickWidth, { color: tickStrokeColor });
     })
-    drawLine(this.context, startX - innerPadding, endY, endX + innerPadding, endY, { color: strokeColor });
+    drawLine(this.getContext(), startX - innerPadding, endY, endX + innerPadding, endY, { color: strokeColor });
   }
 }

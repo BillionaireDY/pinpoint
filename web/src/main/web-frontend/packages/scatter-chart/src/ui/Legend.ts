@@ -54,7 +54,7 @@ export class Legend {
     this.setDataStyleMap(dataStyleMap)
   }
 
-  get container() {
+  getContainer() {
     return this.containerElement
   }
   

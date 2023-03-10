@@ -54,22 +54,22 @@ export class Guide extends Layer {
 
   constructor(wrapper: HTMLElement, props: GuideOptions) {
     super({ width: props.width, height: props.height});
-    this.canvas.style.position = 'absolute';
-    this.canvas.style.zIndex = '999';
-    this.canvas.style.top = '0px';
-    this.canvas.style.left = '0px';
-    this.canvas.style.background = 'transparent';
+    this.getCanvas().style.position = 'absolute';
+    this.getCanvas().style.zIndex = '999';
+    this.getCanvas().style.top = '0px';
+    this.getCanvas().style.left = '0px';
+    this.getCanvas().style.background = 'transparent';
     this.option = props.option;
     this.setOptions(props);
     this.wrapper = wrapper;
-    this.wrapper.append(this.canvas);
+    this.wrapper.append(this.getCanvas());
     
     this.addEventListener();
   }
 
   private isMouseInValidArea(x: number, y: number) {
-    const width = this.canvas.width / this.dpr;
-    const height = this.canvas.height / this.dpr;
+    const width = this.getCanvas().width / this.getDpr();
+    const height = this.getCanvas().height / this.getDpr();
     const padding = this.padding
 
     return (
@@ -81,16 +81,16 @@ export class Guide extends Layer {
   }
 
   private addEventListener() {
-    this.canvas.addEventListener('mousedown', ({ offsetX, offsetY }) => {
+    this.getCanvas().addEventListener('mousedown', ({ offsetX, offsetY }) => {
       this.isMouseDown = true;
       this.dragStartX = offsetX;
       this.dragStartY = offsetY;
     });
 
-    this.canvas.addEventListener('mousemove', ({ offsetX, offsetY }) => {;
-      const width = this.canvas.width / this.dpr;
-      const height = this.canvas.height / this.dpr;
-      this.context.clearRect(0, 0, width, height);
+    this.getCanvas().addEventListener('mousemove', ({ offsetX, offsetY }) => {;
+      const width = this.getCanvas().width / this.getDpr();
+      const height = this.getCanvas().height / this.getDpr();
+      this.getContext().clearRect(0, 0, width, height);
       const x = offsetX;
       const y = offsetY;
       if (this.isMouseInValidArea(x, y)) {
@@ -103,7 +103,7 @@ export class Guide extends Layer {
       }
       if (this.isMouseDown) {
         this.isDragging = true;
-        drawRect(this.context,
+        drawRect(this.getContext(),
           this.dragStartX, this.dragStartY, offsetX - this.dragStartX, offsetY - this.dragStartY,
           {
             color: this.option?.drag?.backgroundColor,
@@ -113,19 +113,19 @@ export class Guide extends Layer {
       }
     });
 
-    this.canvas.addEventListener('mouseout', event => {
-      const width = this.canvas.width / this.dpr;
-      const height = this.canvas.height / this.dpr;
+    this.getCanvas().addEventListener('mouseout', event => {
+      const width = this.getCanvas().width / this.getDpr();
+      const height = this.getCanvas().height / this.getDpr();
       this.isMouseDown = false;
       this.isDragging = false;
-      this.context.clearRect(0, 0, width, height);
+      this.getContext().clearRect(0, 0, width, height);
     });
 
-    this.canvas.addEventListener('mouseup', event => {
-      const width = this.canvas.width / this.dpr;
-      const height = this.canvas.height / this.dpr;
+    this.getCanvas().addEventListener('mouseup', event => {
+      const width = this.getCanvas().width / this.getDpr();
+      const height = this.getCanvas().height / this.getDpr();
       const { offsetX, offsetY } = event;
-      this.context.clearRect(0, 0, width, height);
+      this.getContext().clearRect(0, 0, width, height);
 
       if (this.isDragging) {
         this.isMouseInValidArea(offsetX, offsetY) && this.drawGuideText(offsetX, offsetY)
@@ -162,7 +162,7 @@ export class Guide extends Layer {
       this.isMouseDown = false;
     });
 
-    this.canvas.addEventListener('click', event => {
+    this.getCanvas().addEventListener('click', event => {
       const { offsetX, offsetY } = event;
       if (!this.isDragging) {
         const xPadding = this.padding.left + this.xAxis.innerPadding
@@ -178,10 +178,12 @@ export class Guide extends Layer {
   }
 
   private drawGuideText(x: number, y: number) {
-    const { padding, context, canvas, ratio, xAxis, yAxis } = this;
+    const { padding, ratio, xAxis, yAxis } = this;
     const { color, backgroundColor, strokeColor } = this.option;
+    const canvas = this.getCanvas();
+    const context = this.getContext();
 
-    const height = canvas.height / this.dpr;
+    const height = canvas.height / this.getDpr();
     const xText = `${xAxis.tick?.format!((x - padding.left - xAxis.innerPadding) / ratio.x + xAxis.min)}`;
     const xTextLines = `${xText}`.split('\n');
     const yText = `${yAxis.tick?.format!(Math.floor(Math.abs((height - padding.bottom - yAxis.innerPadding - y) / ratio.y + yAxis.min)))}`;
@@ -212,8 +214,8 @@ export class Guide extends Layer {
   }
 
   public setOptions({
-    width = this.canvas.width / this.dpr,
-    height = this.canvas.height / this.dpr,
+    width = this.getCanvas().width / this.getDpr(),
+    height = this.getCanvas().height / this.getDpr(),
     ratio = this.ratio,
     padding = this.padding,
     xAxis = this.xAxis,

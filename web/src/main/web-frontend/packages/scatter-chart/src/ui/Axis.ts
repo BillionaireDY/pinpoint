@@ -28,7 +28,7 @@ export class Axis extends Layer {
     this.tick = { ...{ count: AXIS_DEFAULT_TICK_COUNT, format: AXIS_DEFAULT_FORMAT }, ...option?.tick };
     this.padding = { ...CONTAINER_PADDING, ...padding };
     this.strokeColor = option?.strokeColor || COLOR_STROKE;
-    option?.tick?.font && (this.context.font = option?.tick?.font);
+    option?.tick?.font && (this.getContext().font = option?.tick?.font);
   }
 
   public setOption(option: AxisOption) {
@@ -38,7 +38,7 @@ export class Axis extends Layer {
     this.strokeColor = option?.strokeColor || this.strokeColor;
     this.tick = { ...this.tick, ...option?.tick };
     const font = option?.tick?.font || this.tick.font
-    font && (this.context.font = font);
+    font && (this.getContext().font = font);
     return this;
   }
 

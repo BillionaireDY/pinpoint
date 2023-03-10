@@ -17,7 +17,7 @@ describe('Test for Scatter', () => {
       SC.render(data1.data);
 
       // then
-      const events = SC.viewport.context.__getEvents();
+      const events = SC.viewport.getContext().__getEvents();
       expect(events).toMatchSnapshot();
     });
 
@@ -30,7 +30,7 @@ describe('Test for Scatter', () => {
       SC.render(data2.data, { append: true });
 
       // then
-      const events = SC.viewport.context.__getEvents();
+      const events = SC.viewport.getContext().__getEvents();
       expect(events).toMatchSnapshot();
     });
 
@@ -56,7 +56,7 @@ describe('Test for Scatter', () => {
       SC.on('click', onClick)
 
       // when
-      fireEvent.click(SC.getGuide().canvas)
+      fireEvent.click(SC.getGuide().getCanvas())
 
       // then
       expect(onClick).toHaveBeenCalled();
@@ -69,7 +69,7 @@ describe('Test for Scatter', () => {
       SC.on('clickLegend', onClick)
 
       // when
-      const inputElement = SC.getLegend().container.getElementsByTagName('input')[0];
+      const inputElement = SC.getLegend().getContainer().getElementsByTagName('input')[0];
       fireEvent.click(inputElement)
 
       // then
@@ -85,7 +85,7 @@ describe('Test for Scatter', () => {
       SC.off('click');
 
       // when
-      fireEvent.click(SC.getGuide().canvas)
+      fireEvent.click(SC.getGuide().getCanvas())
 
       // then
       expect(onClick).not.toHaveBeenCalled();
@@ -99,8 +99,8 @@ describe('Test for Scatter', () => {
       SC.resize(100, 100);
 
       // then
-      expect(SC.viewport.styleWidth).toBe(100);
-      expect(SC.viewport.styleHeight).toBe(100);
+      expect(SC.viewport.getStyleWidth()).toBe(100);
+      expect(SC.viewport.getStyleHeight()).toBe(100);
     });
 
     it('data should be cleared by `clear` method', () => {

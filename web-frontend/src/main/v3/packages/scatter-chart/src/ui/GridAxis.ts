@@ -1,3 +1,4 @@
+import merge from 'lodash.merge';
 import { CONTAINER_PADDING } from '../constants/ui';
 import { DeepNonNullable, GridOption, Padding, TickOption } from '../types/types';
 import { drawLine } from '../utils/draw';
@@ -5,8 +6,6 @@ import { Axis } from './Axis';
 import { Layer, LayerProps } from './Layer';
 
 export interface GridAxisProps extends LayerProps {
-  // xTickCount?: number;
-  // yTickCount?: number;
   xAxis: Axis;
   yAxis: Axis;
   padding?: DeepNonNullable<Padding>;
@@ -16,14 +15,16 @@ export interface GridAxisProps extends LayerProps {
 export class GridAxis extends Layer {
   xAxis;
   yAxis;
-  option;
   padding;
+  option: GridOption = {
+    strokeColor: '#d1d1d1',
+  };
 
   constructor({ xAxis, yAxis, option, padding, ...props }: GridAxisProps) {
     super(props);
     this.xAxis = xAxis;
     this.yAxis = yAxis;
-    this.option = option;
+    this.option = merge({}, this.option, option);
     this.padding = { ...CONTAINER_PADDING, ...padding };
     this.priority = 99999;
 
@@ -91,13 +92,7 @@ export class GridAxis extends Layer {
     return this;
   }
 
-  // public setXTickCount(tick: number) {
-  //   this.xTickCount = tick;
-  //   return this;
-  // }
-
-  // public setYickCount(tick: number) {
-  //   this.yTickCount = tick;
-  //   return this;
-  // }
+  public getOption(): GridOption {
+    return this.option;
+  }
 }

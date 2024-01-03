@@ -1,4 +1,3 @@
-import { DeepNonNullable, Padding, TickOption } from '../types/types';
 import { drawLine, drawText } from '../utils/draw';
 import { Axis, AxisProps } from './Axis';
 
@@ -11,13 +10,7 @@ export class XAxis extends Axis {
   public render() {
     this.clear();
     const { min, max, tick, innerPadding, strokeColor } = this;
-    const {
-      format,
-      count,
-      color,
-      width: tickWidth,
-      strokeColor: tickStrokeColor,
-    } = tick as DeepNonNullable<TickOption>;
+    const { format, count, color, width: tickWidth, strokeColor: tickStrokeColor } = tick;
     const padding = this.padding;
     const width = this.canvas.width / this.dpr;
     const height = this.canvas.height / this.dpr;
@@ -39,7 +32,7 @@ export class XAxis extends Axis {
           this.context,
           `${line}`,
           x,
-          height - padding.bottom + tick!.width! + textHeight + tick!.padding!.top! - i * this.getTextHeight(line),
+          height - padding.bottom + tick.width + textHeight + tick.padding.top - i * this.getTextHeight(line),
           { textAlign: 'center', textBaseline: 'bottom', color },
         );
       });

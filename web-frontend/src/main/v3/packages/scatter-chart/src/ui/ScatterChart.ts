@@ -26,16 +26,7 @@ import { COLORS, CONTAINER_HEIGHT, CONTAINER_PADDING, CONTAINER_WIDTH, LAYER_DEF
 import { GridAxis } from './GridAxis';
 import { Legend, LegendEventCallback, LegendEventTypes } from './Legend';
 import { Guide, GuideEventCallback, GuideEventTypes } from './Guide';
-import {
-  defaultAxisOption,
-  defaultBackgroundOption,
-  defaultDataOption,
-  defaultGridOption,
-  defaultGuideOption,
-  defaultLegendOption,
-  defaultPointOption,
-  defaultRenderOption,
-} from '../constants/options';
+import { defaultBackgroundOption, defaultPointOption, defaultRenderOption } from '../constants/options';
 import { getLongestText, getTickTexts } from '../utils/helper';
 
 export interface ScatterChartOption {
@@ -51,13 +42,8 @@ export interface ScatterChartOption {
 }
 
 interface ScatterChartSettedOption {
-  axis: { x: AxisOption; y: AxisOption };
   data: DataOption[];
-  legend: LegendOption;
-  guide: GuideOption;
   background: BackgroundOption;
-  grid: GridOption;
-  padding: DeepNonNullable<Padding>;
   point: PointOption;
   render: RenderOption;
 }
@@ -97,50 +83,38 @@ export class ScatterChart {
   private height = 0;
   private t0 = 0;
   private reqAnimation = 0;
-  private compositedPadding: DeepNonNullable<Padding>;
+  private padding: DeepNonNullable<Padding>;
 
   constructor(rootContainer: HTMLElement, options: ScatterChartOption) {
     this.rootContainer = rootContainer;
-    this.compositedPadding = { ...CONTAINER_PADDING, ...options.padding };
+    this.padding = { ...CONTAINER_PADDING, ...options.padding };
+    this.width = this.rootContainer.clientWidth || CONTAINER_WIDTH;
+    this.height = this.rootContainer.clientHeight || CONTAINER_HEIGHT;
 
     this.setOptions(options);
-    this.setWidthAndHeight();
     this.setViewPort();
-    this.setAxis();
+    this.setAxis(options);
     this.setPadding();
     this.setRatio();
-    this.setGuide();
+    this.setGuide(options);
     this.setLayers();
-    this.setLegends();
+    this.setLegends(options);
 
     this.shoot();
 
     this.animate = this.animate.bind(this);
   }
 
-  private setOptions(options: ScatterChartOption) {
+  private setOptions(options: Partial<ScatterChartOption>) {
     this.options = {
-      // TODO deep copy
-      axis: merge({}, defaultAxisOption, options?.axis),
-      data: [...defaultDataOption, ...options?.data],
-      legend: merge({}, defaultLegendOption, options?.legend),
-      guide: merge({}, defaultGuideOption, options?.guide),
+      data: [...(options?.data || [])],
       background: merge({}, defaultBackgroundOption, options?.background),
-      grid: { ...defaultGridOption, ...options?.grid },
-      padding: { ...this.compositedPadding, ...options?.padding },
       point: { ...defaultPointOption, ...options.point },
       render: { ...defaultRenderOption, ...options.render },
     };
   }
 
-  private setWidthAndHeight() {
-    this.width = this.rootContainer.clientWidth || CONTAINER_WIDTH;
-    this.height = this.rootContainer.clientHeight || CONTAINER_HEIGHT;
-  }
-
-  private setAxis() {
-    const options = this.options;
-
+  private setAxis(options: ScatterChartOption) {
     this.yAxis = new YAxis({
       option: options.axis.y,
       width: this.width,
@@ -178,59 +152,54 @@ export class ScatterChart {
     const xTickPadding = this.xAxis.tick?.padding as DeepNonNullable<Padding>;
     const yTickPadding = this.yAxis.tick?.padding as DeepNonNullable<Padding>;
 
-    this.options.padding = {
-      top: this.compositedPadding.top,
-      right: this.compositedPadding.right + maxXTickTextWidth / 2 + xTickPadding.right,
+    this.padding = {
+      top: this.padding.top,
+      right: this.padding.right + maxXTickTextWidth / 2 + xTickPadding.right,
       bottom:
-        maxXTickTextHeight +
-        xTickPadding.top +
-        xTickPadding.bottom +
-        xAxisOption.tick!.width! +
-        this.compositedPadding.bottom,
+        maxXTickTextHeight + xTickPadding.top + xTickPadding.bottom + xAxisOption.tick.width + this.padding.bottom,
       left:
         (maxXTickTextWidth / 2 > maxYTickTextWidth ? maxXTickTextWidth / 2 : maxYTickTextWidth) +
         yTickPadding.left +
         yTickPadding.right +
-        yAxisOptoin.tick!.width! +
-        this.compositedPadding.left,
+        yAxisOptoin.tick.width +
+        this.padding.left,
     };
 
-    this.xAxis.setPadding(this.options.padding);
-    this.yAxis.setPadding(this.options.padding);
-    this.gridAxis.setPadding(this.options.padding);
+    this.xAxis.setPadding(this.padding);
+    this.yAxis.setPadding(this.padding);
+    this.gridAxis.setPadding(this.padding);
   }
 
   private setRatio() {
-    const axisOption = this.options?.axis;
     const xAxis = this.xAxis.getOption();
     const yAxis = this.yAxis.getOption();
-    const padding = this.options.padding;
+    const padding = this.padding;
     const width = this.viewport.canvas.width / this.viewport.viewLayer.dpr;
     const height = this.viewport.canvas.height / this.viewport.viewLayer.dpr;
     const minX = xAxis.min;
     const maxX = xAxis.max;
     const minY = yAxis.min;
     const maxY = yAxis.max;
-    const innerPaddingX = axisOption.x.padding ?? this.xAxis.innerPadding;
-    const innerPaddingY = axisOption.y.padding ?? this.yAxis?.innerPadding;
+    const innerPaddingX = this.xAxis.innerPadding;
+    const innerPaddingY = this.yAxis.innerPadding;
 
     this.xRatio = (width - padding.left - padding.right - innerPaddingX * 2) / (maxX - minX);
     this.yRatio = (height - padding.bottom - padding.top - innerPaddingY * 2) / (maxY - minY);
   }
 
-  private setGuide() {
-    if (!this.options.guide.hidden) {
+  private setGuide(options: ScatterChartOption) {
+    if (!options.guide?.hidden) {
       this.guide = new Guide(this.viewport.containerElement, {
         width: this.width,
         height: this.height,
-        padding: this.options.padding,
+        padding: this.padding,
         xAxis: this.xAxis,
         yAxis: this.yAxis,
         ratio: {
           x: this.xRatio,
           y: this.yRatio,
         },
-        option: this.options.guide!,
+        option: options.guide,
       });
     }
   }
@@ -277,11 +246,11 @@ export class ScatterChart {
     }, {});
   };
 
-  private setLegends() {
-    if (!this.options.legend.hidden) {
+  private setLegends(options: ScatterChartOption) {
+    if (!options?.legend?.hidden) {
       this.legend = new Legend(this.rootContainer, {
         dataStyleMap: this.dataStyleMap,
-        legendOptions: this.options!.legend!,
+        legendOptions: options?.legend,
       });
 
       this.legend.onChange((_, { checked, unChecked }) => {
@@ -330,8 +299,7 @@ export class ScatterChart {
     if (!this.t0) this.t0 = now;
     const dt = now - this.t0;
     const innerPadding = this.xAxis.innerPadding;
-    const pureWidth =
-      this.viewport.styleWidth - this.options.padding.left - this.options.padding.right - innerPadding * 2;
+    const pureWidth = this.viewport.styleWidth - this.padding.left - this.padding.right - innerPadding * 2;
     const pixcelPerFrame = (pureWidth / duration) * dt;
     this.t0 = now;
     this.coordX = this.coordX - pixcelPerFrame;
@@ -379,7 +347,7 @@ export class ScatterChart {
         if (!layer.isFixed) {
           layer.swapCanvasImage({
             width: pureWidth,
-            startAt: this.xAxis.innerPadding + this.options.padding.left,
+            startAt: this.xAxis.innerPadding + this.padding.left,
           });
         }
       });
@@ -397,7 +365,7 @@ export class ScatterChart {
 
   public render(data: ScatterDataType[], option?: RenderOption) {
     const { styleHeight } = this.viewport;
-    const { padding } = this.options;
+    const padding = this.padding;
     const renderOption = { ...this.options.render, ...option };
 
     if (this.reqAnimation === 0) {
@@ -539,7 +507,7 @@ export class ScatterChart {
     };
     render?: RenderOption;
   }) {
-    this.setOptions(merge(this.options, { render }));
+    this.setOptions(merge({}, this.options, { render }));
     this.xAxis.setOption(axis?.x);
     this.yAxis.setOption(axis?.y);
     this.setPadding();
@@ -547,7 +515,7 @@ export class ScatterChart {
     this.guide?.setOptions({
       xAxis: this.xAxis,
       yAxis: this.yAxis,
-      padding: this.options.padding,
+      padding: this.padding,
       ratio: { x: this.xRatio, y: this.yRatio },
     });
     this.render(this.data);
@@ -572,8 +540,7 @@ export class ScatterChart {
     const xAxisOption = this.xAxis.getOption();
     const realtimeWidth =
       this.width * ScatterChart.REALTIME_MULTIPLE -
-      (this.options.padding.left + this.options.padding.right + this.xAxis.innerPadding * 2) *
-        (ScatterChart.REALTIME_MULTIPLE - 1);
+      (this.padding.left + this.padding.right + this.xAxis.innerPadding * 2) * (ScatterChart.REALTIME_MULTIPLE - 1);
     this.realtimeAxisMinX = xAxisOption.min;
     this.realtimeAxisMaxX = (xAxisOption.max - xAxisOption.min) * ScatterChart.REALTIME_MULTIPLE + xAxisOption.min;
     this.coordX = -this.xAxis.innerPadding;
@@ -584,7 +551,7 @@ export class ScatterChart {
         min: this.realtimeAxisMinX,
         max: this.realtimeAxisMaxX,
         tick: {
-          count: xAxisOption.tick!.count! * ScatterChart.REALTIME_MULTIPLE - (ScatterChart.REALTIME_MULTIPLE - 1),
+          count: xAxisOption.tick.count * ScatterChart.REALTIME_MULTIPLE - (ScatterChart.REALTIME_MULTIPLE - 1),
         },
       })
       .render();
@@ -613,7 +580,7 @@ export class ScatterChart {
       .setOption(
         merge({}, xAxisOption, {
           tick: {
-            count: (xAxisOption.tick!.count! + (ScatterChart.REALTIME_MULTIPLE - 1)) / ScatterChart.REALTIME_MULTIPLE,
+            count: (xAxisOption.tick.count + (ScatterChart.REALTIME_MULTIPLE - 1)) / ScatterChart.REALTIME_MULTIPLE,
           },
         }),
       )
@@ -636,9 +603,13 @@ export class ScatterChart {
     this.render([]);
   }
 
-  public getOption() {
+  public getOption(): ScatterChartOption {
     return {
       ...this.options,
+      grid: this.gridAxis.getOption(),
+      guide: this.guide?.getOption(),
+      legend: this.legend?.getOption(),
+      padding: this.padding,
       axis: {
         x: this.xAxis.getOption(),
         y: this.yAxis.getOption(),

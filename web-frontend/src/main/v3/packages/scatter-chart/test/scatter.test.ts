@@ -189,5 +189,31 @@ describe('Test for Scatter', () => {
         expect(legendContainer?.childNodes.length).toBe('0');
       });
     });
+
+    it('The return value of `getOption` must be of the ScatterChartOption type.', () => {
+      // given
+      SC = new ScatterChartTestHelper(wrapper, initOption);
+      SC.render(data1.data);
+
+      // when
+      const option = SC.getOption();
+
+      // then
+      expect(option.axis).toEqual(expect.any(Object));
+      expect(option.axis.x).toEqual(expect.any(Object));
+      expect(option.axis.y).toEqual(expect.any(Object));
+      expect(option.data).toEqual(expect.any(Array));
+      expect(option.background).toEqual(expect.any(Object));
+      expect(option.grid).toEqual(expect.any(Object));
+      expect(option.guide).toEqual(expect.any(Object));
+      expect(option.legend).toEqual(expect.any(Object));
+      expect(option.padding).toEqual(expect.any(Object));
+      expect(option.padding?.top).toEqual(expect.any(Number));
+      expect(option.padding?.bottom).toEqual(expect.any(Number));
+      expect(option.padding?.left).toEqual(expect.any(Number));
+      expect(option.padding?.right).toEqual(expect.any(Number));
+      expect(option.point).toEqual(expect.any(Object));
+      expect(option.render).toEqual(expect.any(Object));
+    });
   });
 });

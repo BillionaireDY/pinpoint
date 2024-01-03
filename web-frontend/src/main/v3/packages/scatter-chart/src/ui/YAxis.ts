@@ -1,4 +1,3 @@
-import { DeepNonNullable, Padding, TickOption } from '../types/types';
 import { drawLine, drawRect, drawText } from '../utils/draw';
 import { Axis, AxisProps } from './Axis';
 
@@ -19,13 +18,7 @@ export class YAxis extends Axis {
   public render() {
     this.clear();
     const { min, max, tick, innerPadding, backgroundColor, strokeColor } = this;
-    const {
-      format,
-      count,
-      color,
-      width: tickWidth,
-      strokeColor: tickStrokeColor,
-    } = tick as DeepNonNullable<TickOption>;
+    const { format, count, color, width: tickWidth, strokeColor: tickStrokeColor } = tick;
     const padding = this.padding;
     const width = this.canvas.width / this.dpr;
     const height = this.canvas.height / this.dpr;
@@ -45,13 +38,10 @@ export class YAxis extends Axis {
     [...Array(count)].forEach((_, i) => {
       const y = hGap * i + startY;
       const label = `${format(yTickGap * (count - 1 - i) + min)}`;
-      drawText(
-        this.context,
-        `${label}`,
-        startX - tick!.padding!.right! - tickWidth,
-        y + this.getTextHeight(label) / 4,
-        { textAlign: 'end', color },
-      );
+      drawText(this.context, `${label}`, startX - tick.padding.right - tickWidth, y + this.getTextHeight(label) / 4, {
+        textAlign: 'end',
+        color,
+      });
       drawLine(this.context, startX - tickWidth, y, startX, y, { color: tickStrokeColor });
     });
     drawLine(this.context, startX, startY - innerPadding, startX, endY + innerPadding, { color: strokeColor });

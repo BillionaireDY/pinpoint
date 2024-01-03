@@ -51,7 +51,7 @@ export interface TickOption {
   width?: number;
   count?: number;
   format?: FormatType<number | string>;
-  padding?: Padding;
+  padding?: DeepNonNullable<Padding>;
 }
 
 export interface DataOption {

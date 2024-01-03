@@ -1,10 +1,11 @@
+import merge from 'lodash.merge';
 import { SCATTER_CHART_IDENTIFIER } from '../constants/ui';
 import { DataStyleMap, LegendOption } from '../types/types';
 
 export type LegendProps = {
-  legendOptions: LegendOption;
   dataStyleMap: DataStyleMap;
   width?: number;
+  legendOptions?: LegendOption;
 };
 
 export type LegendEventTypes = 'clickLegend' | 'change';
@@ -38,7 +39,10 @@ export class Legend {
   static COUNT_CLASS = `${Legend.LEGEND_CLASS}_count`;
   private uniqId = new Date().getTime();
   private rootWrapper;
-  private options;
+  private options: LegendOption = {
+    formatLabel: (label) => label,
+    formatValue: (value) => value,
+  };
   private dataStyleMap!: DataStyleMap;
   private containerElement: HTMLElement;
   private legendElements: { [key: string]: HTMLDivElement } = {};
@@ -49,7 +53,7 @@ export class Legend {
   constructor(rootWrapper: HTMLElement, { legendOptions, dataStyleMap, width }: LegendProps) {
     this.abortController = new AbortController();
     this.rootWrapper = rootWrapper;
-    this.options = legendOptions;
+    this.options = merge({}, this.options, legendOptions);
     this.containerElement = document.createElement('div');
     this.containerElement.className = Legend.LEGEND_CONTAINER_CLASS;
     this.rootWrapper.append(this.containerElement);
@@ -178,5 +182,9 @@ export class Legend {
     keys.forEach((key: LegendEventTypes) => {
       this.off(key);
     });
+  }
+
+  public getOption(): LegendOption {
+    return this.options;
   }
 }

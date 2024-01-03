@@ -3,6 +3,8 @@ import { Coord, DeepNonNullable, GuideOption, Padding } from '../types/types';
 import { drawLine, drawRect, drawText } from '../utils/draw';
 import { Axis } from './Axis';
 import { Layer } from './Layer';
+import { COLOR_BACKGROUND, COLOR_STROKE } from '../constants/ui';
+import merge from 'lodash.merge';
 
 export interface GuideOptions {
   width: number;
@@ -13,7 +15,7 @@ export interface GuideOptions {
     x: number;
     y: number;
   };
-  option: GuideOption;
+  option?: GuideOption;
   padding: DeepNonNullable<Padding>;
 }
 
@@ -51,7 +53,16 @@ export class Guide extends Layer {
   private ratio!: GuideOptions['ratio'];
   private xAxis!: GuideOptions['xAxis'];
   private yAxis!: GuideOptions['yAxis'];
-  private option;
+  private option: GuideOption = {
+    color: COLOR_BACKGROUND,
+    strokeColor: COLOR_STROKE,
+    backgroundColor: 'black',
+    drag: {
+      strokeColor: '#469ae4',
+      backgroundColor: 'rgba(225,225,225,0.4)',
+    },
+    font: '',
+  };
 
   constructor(wrapper: HTMLElement, props: GuideOptions) {
     super({ width: props.width, height: props.height });
@@ -60,7 +71,7 @@ export class Guide extends Layer {
     this.canvas.style.top = '0px';
     this.canvas.style.left = '0px';
     this.canvas.style.background = 'transparent';
-    this.option = props.option;
+    this.option = merge({}, this.option, props.option);
     this.setOptions(props);
     this.wrapper = wrapper;
     this.wrapper.append(this.canvas);
@@ -211,20 +222,20 @@ export class Guide extends Layer {
     const { color, backgroundColor, strokeColor, font } = this.option;
 
     const height = canvas.height / this.dpr;
-    const xText = `${xAxis.tick?.format!((x - padding.left - xAxis.innerPadding) / ratio.x + xAxis.min)}`;
+    const xText = `${xAxis.tick.format((x - padding.left - xAxis.innerPadding) / ratio.x + xAxis.min)}`;
     const xTextLines = `${xText}`.split('\n');
-    const yText = `${yAxis.tick?.format!(
+    const yText = `${yAxis.tick.format(
       Math.floor(Math.abs((height - padding.bottom - yAxis.innerPadding - y) / ratio.y + yAxis.min)),
     )}`;
 
     // x1
-    const xTextWidth = this.getTextWidth(xText) + xAxis.tick!.padding!.left! + xAxis.tick!.padding!.right!;
+    const xTextWidth = this.getTextWidth(xText) + xAxis.tick.padding.left + xAxis.tick.padding.right;
     const xTextHeight = this.getTextHeight(xText);
     // y
     const yTextWidth = this.getTextWidth(yText);
     const yTextHeight = this.getTextHeight(yText);
-    const yRectWidth = yTextWidth + yAxis.tick!.padding!.left! + yAxis.tick!.padding!.left!;
-    const yRectHeight = yTextHeight + yAxis.tick!.padding!.top! + yAxis.tick!.padding!.bottom!;
+    const yRectWidth = yTextWidth + yAxis.tick.padding.left + yAxis.tick.padding.left;
+    const yRectHeight = yTextHeight + yAxis.tick.padding.top + yAxis.tick.padding.bottom;
 
     this.context.font = font || '';
 
@@ -232,12 +243,12 @@ export class Guide extends Layer {
     drawRect(
       context,
       x - xTextWidth / 2,
-      height - padding.bottom + xAxis.tick!.width!,
+      height - padding.bottom + xAxis.tick.width,
       xTextWidth,
-      xTextHeight + xAxis.tick!.padding!.top! + xAxis.tick!.padding!.bottom!,
+      xTextHeight + xAxis.tick.padding.top + xAxis.tick.padding.bottom,
       { color: backgroundColor },
     );
-    drawLine(context, padding.left - xAxis.tick!.width!, y, padding.left, y, { color: strokeColor });
+    drawLine(context, padding.left - xAxis.tick.width, y, padding.left, y, { color: strokeColor });
 
     xTextLines.reverse().forEach((xLine, i) => {
       drawText(
@@ -246,22 +257,22 @@ export class Guide extends Layer {
         x,
         height -
           padding.bottom +
-          xAxis.tick!.width! +
+          xAxis.tick.width +
           xTextHeight +
-          xAxis.tick!.padding!.top! -
+          xAxis.tick.padding.top -
           i * this.getTextHeight(xLine),
         { color, textAlign: 'center', textBaseline: 'bottom' },
       );
     });
 
     // y
-    drawRect(context, padding.left - yAxis.tick!.width! - yRectWidth, y - yRectHeight / 2, yRectWidth, yRectHeight, {
+    drawRect(context, padding.left - yAxis.tick.width - yRectWidth, y - yRectHeight / 2, yRectWidth, yRectHeight, {
       color: backgroundColor,
     });
-    drawLine(context, x, height - padding.bottom, x, height - padding.bottom + yAxis.tick!.width!, {
+    drawLine(context, x, height - padding.bottom, x, height - padding.bottom + yAxis.tick.width, {
       color: strokeColor,
     });
-    drawText(context, yText, padding.left - yAxis.tick!.width! - yAxis.tick!.padding!.right!, y + yTextHeight / 4, {
+    drawText(context, yText, padding.left - yAxis.tick.width - yAxis.tick.padding.right, y + yTextHeight / 4, {
       color,
       textAlign: 'end',
     });
@@ -302,5 +313,9 @@ export class Guide extends Layer {
     keys.forEach((key: GuideEventTypes) => {
       this.off(key);
     });
+  }
+
+  public getOption(): GuideOption {
+    return this.option;
   }
 }

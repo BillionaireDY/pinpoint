@@ -1,5 +1,5 @@
 import { AXIS_DEFAULT_TICK_COUNT } from '../constants/ui';
-import { AxisOption } from '../types/types';
+import { AxisOption, ScatterDataType } from '../types/types';
 
 export const getDevicePicelRatio = () => {
   const dpr = window?.devicePixelRatio || 2;
@@ -76,4 +76,18 @@ export const getSafeDrawImageArgs = (
     (x2 - x1) * w_ratio,
     (y2 - y1) * h_ratio,
   ];
+};
+
+export const countByTimeInterval = (data: ScatterDataType[], interval = 250) => {
+  const startTime = data[0].x;
+  const result: { [key: number]: number } = {};
+
+  data.forEach((d) => {
+    const elapsedMilliseconds = d.x - startTime;
+    const intervalIndex = Math.floor(elapsedMilliseconds / interval);
+
+    result[startTime + intervalIndex * interval] = (result[startTime + intervalIndex * interval] || 0) + 1;
+  });
+
+  return result;
 };

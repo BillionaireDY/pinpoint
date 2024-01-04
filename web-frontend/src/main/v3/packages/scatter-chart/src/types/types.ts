@@ -102,3 +102,5 @@ export interface RenderOption {
   append?: boolean;
   drawOutOfRange?: boolean;
 }
+
+export type ModeOption = 'default' | 'light';

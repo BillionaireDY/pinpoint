@@ -16,6 +16,7 @@ import {
   ScatterDataType,
   DataStyleMap,
   RenderOption,
+  ModeOption,
 } from '../types/types';
 import { Layer } from './Layer';
 import { Viewport, ViewportEventCallback, ViewportEventTypes } from './Viewport';
@@ -28,6 +29,9 @@ import { Legend, LegendEventCallback, LegendEventTypes } from './Legend';
 import { Guide, GuideEventCallback, GuideEventTypes } from './Guide';
 import { defaultBackgroundOption, defaultPointOption, defaultRenderOption } from '../constants/options';
 import { getLongestText, getTickTexts } from '../utils/helper';
+import { DataManager } from '../model/DataManager';
+import { LightDataManager } from '../model/LightDataManager';
+import { DefaultDataManager } from '../model/DefaultDataManager';
 
 export interface ScatterChartOption {
   axis: { x: AxisOption; y: AxisOption };
@@ -39,6 +43,7 @@ export interface ScatterChartOption {
   padding?: Padding;
   point?: PointOption;
   render?: RenderOption;
+  mode?: ModeOption;
 }
 
 interface ScatterChartSettedOption {
@@ -68,7 +73,7 @@ export class ScatterChart {
   protected legend?: Legend;
   protected guide?: Guide;
   protected data: ScatterDataType[] = [];
-  private datas: { [key: string]: Coord[] } = {};
+  private dataManager!: DataManager;
   private rootContainer;
   private dataStyleMap!: DataStyleMap;
   private dataLayers: { [key: string]: Layer } = {};
@@ -90,14 +95,15 @@ export class ScatterChart {
     this.padding = { ...CONTAINER_PADDING, ...options.padding };
     this.width = this.rootContainer.clientWidth || CONTAINER_WIDTH;
     this.height = this.rootContainer.clientHeight || CONTAINER_HEIGHT;
+    this.viewport = new Viewport(this.rootContainer, { width: this.width, height: this.height });
 
     this.setOptions(options);
-    this.setViewPort();
+    this.setDataManager(options?.mode);
     this.setAxis(options);
     this.setPadding();
     this.setRatio();
     this.setGuide(options);
-    this.setLayers();
+    this.setDataLayers();
     this.setLegends(options);
 
     this.shoot();
@@ -112,6 +118,14 @@ export class ScatterChart {
       point: { ...defaultPointOption, ...options.point },
       render: { ...defaultRenderOption, ...options.render },
     };
+  }
+
+  private setDataManager(mode?: ModeOption) {
+    if (mode === 'light') {
+      this.dataManager = new LightDataManager();
+    } else {
+      this.dataManager = new DefaultDataManager();
+    }
   }
 
   private setAxis(options: ScatterChartOption) {
@@ -204,23 +218,20 @@ export class ScatterChart {
     }
   }
 
-  private setLayers() {
+  private setDataLayers() {
     const width = this.viewport.styleWidth;
     const height = this.viewport.styleHeight;
     const dataOptions = this.options.data;
     this.setDataStyle(dataOptions);
 
     dataOptions.forEach(({ type, priority = LAYER_DEFAULT_PRIORITY }) => {
-      this.setLayer(type, width, height, priority);
+      this.seDatatLayer(type, width, height, priority);
     });
   }
 
-  private setViewPort() {
-    this.viewport = new Viewport(this.rootContainer, { width: this.width, height: this.height });
-  }
-
-  private setLayer(legend: string, width: number, height: number, priority: number) {
+  private seDatatLayer(legend: string, width: number, height: number, priority: number) {
     const layer = new Layer({ width, height });
+
     layer.id = legend;
     layer.priority = priority;
     this.dataLayers[legend] = layer;
@@ -274,15 +285,8 @@ export class ScatterChart {
     maxCoord: Coord;
     drawOutOfRange: RenderOption['drawOutOfRange'];
   }) {
-    const count =
-      this.datas[type]?.reduce((acc, curr) => {
-        const isInRangeX = curr.x >= minCoord.x && curr.x <= maxCoord.x;
-        const isInRangeY = drawOutOfRange ? curr.y >= minCoord.y : curr.y >= minCoord.y && curr.y <= maxCoord.y;
-        if (isInRangeX && isInRangeY) {
-          return ++acc;
-        }
-        return acc;
-      }, 0) || 0;
+    const count = this.dataManager.getCount(type, minCoord, maxCoord, drawOutOfRange);
+
     this.legend?.setLegendCount(type, count);
   }
 
@@ -308,8 +312,11 @@ export class ScatterChart {
     if (this.realtimeCycle % 15 === 0) {
       const x = Math.abs(this.coordX + innerPadding) / this.xRatio + this.realtimeAxisMinX;
 
-      Object.keys(this.datas).forEach((key) => {
-        this.datas[key] = this.datas[key].filter((d) => d.x > x);
+      this.dataManager.getLegendKeys().forEach((key) => {
+        this.dataManager.setDataByLegend(
+          key,
+          this.dataManager.getDataByLegend(key).filter((d) => d.x > x),
+        );
         this.setLegendCount({
           type: key,
           minCoord: {
@@ -359,7 +366,7 @@ export class ScatterChart {
     const { styleWidth, styleHeight } = this.viewport;
     this.options.data = [...this.options.data, { type }];
     this.setDataStyle(this.options.data);
-    this.setLayer(type, styleWidth, styleHeight, LAYER_DEFAULT_PRIORITY);
+    this.seDatatLayer(type, styleWidth, styleHeight, LAYER_DEFAULT_PRIORITY);
     this.legend?.unmount().setDataStyleMap(this.dataStyleMap).render();
   };
 
@@ -369,15 +376,12 @@ export class ScatterChart {
     const renderOption = { ...this.options.render, ...option };
 
     if (this.reqAnimation === 0) {
-      if (renderOption.append) {
-        this.data = [...this.data, ...data];
-      } else {
-        this.data = data;
-        this.datas = {};
-        // clear all data layers
+      if (!renderOption.append) {
         Object.values(this.dataLayers).forEach((layer) => layer.clear());
       }
     }
+
+    this.dataManager.addData(data, renderOption.append);
 
     data.forEach(({ x, y, type, hidden }) => {
       const legend = type ? type : 'unknown';
@@ -385,12 +389,6 @@ export class ScatterChart {
       const radius = dataStyle?.radius;
       if (!this.dataLayers[legend]) {
         this.addNewDataType(legend);
-      }
-
-      if (this.datas[legend]) {
-        this.datas[legend].push({ x, y });
-      } else {
-        this.datas[legend] = [{ x, y }];
       }
 
       const isInRangeX = x >= this.xAxis.min && x <= this.xAxis.max;
@@ -410,9 +408,9 @@ export class ScatterChart {
               radius: radius,
             });
           } else if (dataStyle.shape === 'area') {
-            const dataLength = this.datas[legend].length;
+            const dataLength = this.dataManager.getDataByLegend(legend).length;
             if (dataLength > 1) {
-              const startData = this.datas[legend][dataLength - 2];
+              const startData = this.dataManager.getDataByLegend(legend)[dataLength - 2];
               const xCoordinateStart =
                 this.xRatio * (startData.x - this.xAxis.min) + padding.left + this.xAxis.innerPadding;
               const yCoordinateStart =
@@ -488,13 +486,11 @@ export class ScatterChart {
     this.guide?.setOptions({
       width: w,
       height: h,
-      xAxis: this.xAxis,
-      yAxis: this.yAxis,
       ratio: { x: this.xRatio, y: this.yRatio },
     });
     Object.values(this.dataLayers).forEach((layer) => layer.setSize(w, h));
     this.legend?.setSize(w);
-    this.render(this.data);
+    this.render(this.dataManager.getAllData());
   }
 
   public setOption({
@@ -518,7 +514,7 @@ export class ScatterChart {
       padding: this.padding,
       ratio: { x: this.xRatio, y: this.yRatio },
     });
-    this.render(this.data);
+    this.render(this.dataManager.getAllData());
   }
 
   public async toBase64Image() {
@@ -561,7 +557,7 @@ export class ScatterChart {
     Object.values(this.dataLayers).forEach((layer) => {
       layer.setSize(realtimeWidth, this.height);
     });
-    this.render(this.data);
+    this.render(this.dataManager.getAllData());
 
     this.animate(duration, this.t0);
   }
@@ -592,7 +588,7 @@ export class ScatterChart {
 
     this.gridAxis.setSize(this.width, this.height).render();
 
-    this.render(this.data);
+    this.render(this.dataManager.getAllData());
   }
 
   get isRealtime() {

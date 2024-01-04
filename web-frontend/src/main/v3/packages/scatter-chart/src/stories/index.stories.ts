@@ -10,6 +10,7 @@ import { createResizable } from './templates/createResizable';
 import { createSetOption } from './templates/createSetOption';
 import { createMultipleCharts } from './templates/createMultipleCharts';
 import { createHideLegend } from './templates/createHideLegend';
+import { createLightMode } from './templates/createLightMode';
 
 // More on default export: https://storybook.js.org/docs/html/writing-stories/introduction#default-export
 export default {
@@ -63,3 +64,6 @@ export const Destroy = TemplateDestroy.bind({});
 
 const TemplateMultipleCharts = () => createMultipleCharts();
 export const MultipleCharts = TemplateMultipleCharts.bind({});
+
+const TemplateLightMode = () => createLightMode();
+export const LightMode = TemplateLightMode.bind({});
